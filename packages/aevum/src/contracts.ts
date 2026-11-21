@@ -26,6 +26,36 @@ export const eip3009Abi = parseAbi([
   "function receiveWithAuthorization(address from, address to, uint256 value, uint256 validAfter, uint256 validBefore, bytes32 nonce, uint8 v, bytes32 r, bytes32 s)",
 ]);
 
+/** ABI of contracts/src/AllowanceVault.sol (Agent Allowance). */
+export const allowanceVaultAbi = parseAbi([
+  "function token() view returns (address)",
+  "function nextAllowanceId() view returns (uint256)",
+  "function createAllowance(address agent, uint256 totalCap, uint256 perPaymentCap, uint256 expiry, address[] payees) returns (uint256 allowanceId)",
+  "function pay(uint256 allowanceId, address payee, uint256 amount)",
+  "function revoke(uint256 allowanceId)",
+  "function allowanceOf(uint256 allowanceId) view returns ((address owner, address agent, uint256 totalCap, uint256 perPaymentCap, uint256 expiry, uint256 spent, bool revoked))",
+  "function isPayee(uint256 allowanceId, address payee) view returns (bool)",
+  "function remaining(uint256 allowanceId) view returns (uint256)",
+  "event AllowanceCreated(uint256 indexed allowanceId, address indexed owner, address indexed agent, uint256 totalCap, uint256 perPaymentCap, uint256 expiry)",
+  "event AllowancePaid(uint256 indexed allowanceId, address indexed payee, uint256 amount, uint256 spentTotal)",
+  "event AllowanceRevoked(uint256 indexed allowanceId, uint256 refunded)",
+  "error ZeroAddress()",
+  "error ZeroTotalCap()",
+  "error ZeroPerPaymentCap()",
+  "error PerPaymentCapExceedsTotalCap()",
+  "error ExpiryInPast()",
+  "error EmptyPayees()",
+  "error AllowanceNotFound()",
+  "error NotAgent()",
+  "error NotOwner()",
+  "error AlreadyRevoked()",
+  "error AllowanceExpired()",
+  "error ZeroAmount()",
+  "error AmountExceedsPerPaymentCap()",
+  "error AmountExceedsTotalCap()",
+  "error PayeeNotAllowed()",
+]);
+
 /** ABI of contracts/src/Checkout.sol. */
 export const checkoutAbi = parseAbi([
   "function token() view returns (address)",

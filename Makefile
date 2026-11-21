@@ -63,6 +63,18 @@ deploy-aevum: ## Deploy Checkout to Aevum testnet. Needs ACCOUNT=<keystore name>
 	@test -n "$(ACCOUNT)" || (echo "Set ACCOUNT=<name>. Create one with: cast wallet import <name> --interactive" && exit 1)
 	cd contracts && forge script script/Deploy.s.sol --rpc-url $(AEVUM_RPC) --broadcast --legacy --account $(ACCOUNT)
 
+deploy-vault-fork: ## Deploy AllowanceVault (real tUSD8) to `make fork`
+	@test "$$(cast chain-id --rpc-url $(FORK_RPC))" = "$(FORK_CHAIN)" || (echo "This only works on 'make fork'." && exit 1)
+	@DEPLOYER=$$(cast to-check-sum-address 0x$$(openssl rand -hex 20)); \
+	  cast rpc anvil_setBalance $$DEPLOYER 0x8ac7230489e80000 --rpc-url $(FORK_RPC) > /dev/null && \
+	  cast rpc anvil_impersonateAccount $$DEPLOYER --rpc-url $(FORK_RPC) > /dev/null && \
+	  echo "Deploying from throwaway address $$DEPLOYER (no private key exists for it)" && \
+	  cd contracts && forge script script/DeployAllowanceVault.s.sol --rpc-url $(FORK_RPC) --broadcast --unlocked --sender $$DEPLOYER
+
+deploy-vault-aevum: ## Deploy AllowanceVault to Aevum testnet. Needs ACCOUNT=<keystore name> (see README)
+	@test -n "$(ACCOUNT)" || (echo "Set ACCOUNT=<name>. Create one with: cast wallet import <name> --interactive" && exit 1)
+	cd contracts && forge script script/DeployAllowanceVault.s.sol --rpc-url $(AEVUM_RPC) --broadcast --legacy --account $(ACCOUNT)
+
 mint: ## `make anvil` only: mint AMOUNT MockUSD8 to TO. Needs CHECKOUT=<address>
 	@test -n "$(TO)" -a -n "$(CHECKOUT)" || (echo "Usage: make mint TO=0x... CHECKOUT=0x... [AMOUNT=100]" && exit 1)
 	cast send $$(cast call $(CHECKOUT) "token()(address)" --rpc-url $(LOCAL_RPC)) "mint(address,uint256)" $(TO) $$(cast parse-units $(AMOUNT) 6) \

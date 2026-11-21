@@ -14,4 +14,12 @@ contracts/cache/
 # deployment logs (keep local runs out; `git add -f` the Aevum 44005 one if you want it in your repo)
 contracts/broadcast/
 
+# agent run logs (decisions + daily-cap state) — local runs only
+agent/decisions.jsonl
+agent/state.json
+
 .DS_Store
+
+# python
+__pycache__/
+*.pyc

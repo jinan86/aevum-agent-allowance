@@ -11,10 +11,14 @@ is an on-chain event, so the full spend history is an audit trail.
 merchants here: the owner sets a spending policy, the agent spends inside it.
 (Deliberately different from PayReceipt-style invoice payments.)
 
-> **Status — Fase 1:** contract + tests on a local fork. The web UI, the
-> off-chain agent, and the relayer come in later phases.
+> **Status — Fase 2:** contract + off-chain agent + web UI, all working on a
+> local fork. The agent judges payment requests (on-chain policy + LLM
+> chain) and pays with direct `pay()` from the agent wallet. Testnet
+> deploy is Fase 3 (needs the project wallet funded — see below).
 >
-> **Alamat testnet:** menyusul (Fase 2: deploy testnet).
+> **Alamat testnet:** menyusul (Fase 3: deploy testnet). Local fork vault:
+> `0xd08578f3d28e3193578220df182a737820ac47cd` (chain 440050, ephemeral).
+> Project wallet (testnet-only, needs funding): `0x3b5859096e164C0B4ACf8a1E9844d066a4d649A7`.
 
 Built on the [Aevum Starter Kit](https://github.com/qday-io/aevum-starter-kit)
 (MIT, © 2026 PQA Labs) — its chain config, `packages/aevum` helpers, fork
@@ -30,7 +34,8 @@ reference and is not used by Agent Allowance.
 - [Quickstart (5 minutes, no funds needed)](#quickstart-5-minutes-no-funds-needed)
 - [Network details](#network-details)
 - [Get test tokens](#get-test-tokens)
-- [Deploy to Aevum testnet (Fase 2)](#deploy-to-aevum-testnet-fase-2)
+- [Deploy to Aevum testnet (Fase 3)](#deploy-to-aevum-testnet-fase-3)
+- [The off-chain agent (`agent/`)](the-off-chain-agent-agent)
 - [Things that differ from Ethereum](#things-that-differ-from-ethereum)
 - [Project layout](#project-layout)
 - [Commands](#commands)
@@ -109,25 +114,39 @@ Run the whole app against a **local copy of Aevum**, with the real tUSD8 and fre
 # terminal 1: local copy of Aevum testnet on 127.0.0.1:8555 (chain 440050)
 make fork
 
-# terminal 2: deploy to the fork and give yourself test money
-make deploy-fork                      # prints the Checkout address (kit example)
+# terminal 2: deploy the vault to the fork and give yourself test money
+make deploy-vault-fork                # prints the AllowanceVault address
 make deal TO=<your wallet address>    # 100 tUSD8 + 10 tQDAY, on the fork only
 
 cp web/.env.example web/.env.local
 #   NEXT_PUBLIC_NETWORKS=fork,aevum
-make dev                              # http://localhost:3000
+#   NEXT_PUBLIC_VAULT_FORK=<address printed by make deploy-vault-fork>
+make dev                              # http://localhost:3000 — open /allowance
 ```
+
+The Allowance page lets you create an allowance (approve + create in two
+clicks), look any allowance up by id, revoke it, and watch `AllowancePaid`
+events live. The kit's checkout/activity pages still work unchanged.
+
+Run the off-chain agent end to end on the same fork (deploy → create
+allowance → agent pays 5 tUSD8 → over-cap payment refused → revoke +
+refund checked):
+
+```bash
+bash agent/e2e_fork.sh
+```
+
+> **Fase 2 scope:** contract + agent + web UI, all verified on the local
+> fork. `make deploy-fork` / `make deploy-local` still deploy the kit's
+> `Checkout` (see [`contracts/script/Deploy.s.sol`](contracts/script/Deploy.s.sol));
+> `make deploy-vault-fork` / `make deploy-vault-aevum` deploy
+> `AllowanceVault` (see [`contracts/script/DeployAllowanceVault.s.sol`](contracts/script/DeployAllowanceVault.s.sol)).
 
 Use the **Local fork / Aevum testnet** switcher in the app's header. The first time you pick the fork, your wallet offers to add "Aevum fork (local)" as a new network; after that, switching is one click and your real testnet network stays untouched.
 
 **Why the fork has its own chain ID (440050):** it copies Aevum's state (accounts, balances, tUSD8) but anything you sign there, such as an EIP-3009 authorization or a permit, can't be replayed on the real testnet, and wallets never mix the two up. `make deploy-fork` also deploys from a random address nobody has the key to, so its contract addresses can't be claimed on the real testnet.
 
 Want an empty chain instead of a fork? `make anvil` + `make deploy-local` deploys a `MockUSD8` (same decimals, EIP-712 domain and EIP-3009 functions as tUSD8) that anyone can mint with `make mint`.
-
-> **Fase 1 scope:** only the contract and its tests are Agent Allowance
-> so far. `make deploy-fork` / `make deploy-local` still deploy the kit's
-> `Checkout` (see [`contracts/script/Deploy.s.sol`](contracts/script/Deploy.s.sol));
-> an `AllowanceVault` deploy script lands in Fase 2 with the testnet deploy.
 
 ---
 
@@ -149,7 +168,15 @@ All of this is in [`packages/aevum/src/chain.ts`](packages/aevum/src/chain.ts) a
 
 ### Alamat testnet
 
-Menyusul (Fase 2: deploy testnet). Fase 1 runs only on a local fork / anvil — no contract has been deployed to Aevum testnet yet.
+Menyusul (Fase 3: deploy testnet). Fase 2 runs on a local fork — no
+contract has been deployed to Aevum testnet yet. Local fork vault (ephemeral,
+chain 440050): `0xd08578f3d28e3193578220df182a737820ac47cd`.
+
+**Project wallet (testnet-only):** `0x3b5859096e164C0B4ACf8a1E9844d066a4d649A7`
+— fresh keypair created for this project; its private key lives outside
+the repo (never committed) and the wallet holds nothing of value. To fund
+it on testnet: claim the Discord faucet with your own wallet, then transfer
+1 tQDAY + 5 tUSD8 to that address. Never send real funds to it.
 
 ---
 
@@ -163,10 +190,11 @@ Menyusul (Fase 2: deploy testnet). Fase 1 runs only on a local fork / anvil — 
 
 ---
 
-## Deploy to Aevum testnet (Fase 2)
+## Deploy to Aevum testnet (Fase 3)
 
-> Not done yet — Fase 1 is local fork only. This section documents the
-> intended flow; do not run it until the Fase 2 deploy script exists.
+> Not done yet — Fase 2 is local fork only. This section documents the
+> intended flow; do not run it until the project wallet is funded (see
+> [Alamat testnet](#alamat-testnet)).
 
 Keep your deployer key out of files and shell history. Foundry's encrypted keystore asks for the key once and a password each time:
 
@@ -174,10 +202,12 @@ Keep your deployer key out of files and shell history. Foundry's encrypted keyst
 cast wallet import aevum-deployer --interactive   # paste the key of a TEST wallet
 cast wallet address --account aevum-deployer      # fund this address from the faucet
 
-# Fase 2: deploy AllowanceVault (real tUSD8) — command to be added with the deploy script
+# Deploy AllowanceVault (real tUSD8) to Aevum testnet
+make deploy-vault-aevum ACCOUNT=aevum-deployer
 ```
 
-Then set the vault address in `web/.env.local` and add `aevum` to `NEXT_PUBLIC_NETWORKS`.
+Then set the vault address in `web/.env.local` (`NEXT_PUBLIC_VAULT_AEVUM=…`)
+and add `aevum` to `NEXT_PUBLIC_NETWORKS`.
 
 **Contract verification:** the explorer's verifier isn't working yet, so `forge verify-contract` will fail for now. Put your contract addresses and a link to the source (the exact commit) in your README and submission instead. The command, for when it's back:
 
@@ -187,6 +217,68 @@ forge verify-contract <address> src/AllowanceVault.sol:AllowanceVault --chain-id
 ```
 
 > Use a wallet made only for testing. Never paste a private key into chat, an issue, or a committed file.
+
+---
+
+## The off-chain agent (`agent/`)
+
+`agent/agent.py` (Python 3, standard library only + `cast`) decides on each
+payment request and pays when it is safe. One request:
+
+```bash
+python3 agent/agent.py --vault 0x... --rpc-url http://127.0.0.1:8555 \
+  --request '{"allowanceId": 1, "task": "pay monthly API bill", "payee": "0x...", "amount": "5"}'
+# --request-file request.json, --dry-run, --wallet <keypair json> also work.
+# Amounts are tUSD8 in decimal units (6 decimals): "5" = 5 tUSD8.
+```
+
+1. **Policy (on-chain, authoritative):** reads the allowance via RPC
+   (`allowanceOf`, `isPayee`, `remaining`, chain timestamp vs expiry) and
+   rejects anything outside it — over per-payment cap, over total cap,
+   expired, revoked, or a payee outside the allowlist.
+2. **Judgment (LLM chain):** asks an LLM whether the request is legitimate
+   and in scope. Providers in order: 100milionseek → OpenRouter (free model
+   `baidu/ernie-5.5-flash-preview:free`, `max_tokens` 4096 — it reasons
+   ~1000 tokens before answering) → Coarena → deterministic heuristic.
+   Either layer can veto: the final risk is the max of the heuristic and
+   LLM risk, and payment needs risk < 70. Auth is the Secure Vault
+   surrogate (same pattern as the Sentinel agent) — keys are never
+   hardcoded or logged. With no keys at all the agent runs heuristic-only.
+3. **Pay (direct `pay()`):** simulates via `eth_call` first, then broadcasts
+   `pay()` from the agent wallet with `cast send --legacy`. Every decision
+   (request, risk, layer/provider, tx hash or refusal reason) is appended
+   to `agent/decisions.jsonl`.
+
+**Fail closed:** a policy rejection, an LLM+heuristic rejection, a failed
+simulation, or a dead LLM chain with a rejecting heuristic all mean NO
+payment — and the refusal is logged like any other decision.
+
+**Rails:** only our vault (`VAULT_ADDRESS`); only policy amounts; simulate
+before broadcast; daily cap `DAILY_CAP_TUSD8` (default 100 tUSD8, tracked
+in `agent/state.json`).
+
+### Direct pay, not gasless — and why
+
+`pay()` only accepts `msg.sender == agent`, so a relayer submitting the
+transaction would be rejected with `NotAgent`. Fase 2 therefore pays
+directly: the agent wallet sends the tx and pays its own tQDAY gas
+(~1 gwei — a payment costs a fraction of a cent in test tokens). Full
+gasless would need a meta-transaction entrypoint in the contract (e.g. the
+agent signs, a relayer submits), which is future work, not Fase 2. The
+kit's EIP-3009 relayer (`web/src/app/api/relay/`) is kept as the reference
+pattern for that step.
+
+### Agent tests
+
+```bash
+python3 -m unittest discover -s agent/tests -v   # 19 tests, no network/keys
+bash agent/e2e_fork.sh                           # full e2e on the local fork
+```
+
+The unit tests cover: policy rejections (over-cap / expired / revoked /
+non-allowlisted payee / zero amount), heuristic scoring, LLM veto,
+fail-closed when all LLM providers are dead, pay calldata encoding, and
+the daily cap.
 
 ---
 
@@ -211,15 +303,20 @@ contracts/            Foundry project
   src/Checkout.sol        the kit's example contract (reference only)
   src/mocks/MockUSD8.sol  local tUSD8 stand-in (anyone can mint)
   test/                   unit tests + test/fork (real tUSD8 on a fork)
-  script/Deploy.s.sol     deploys to anvil, a fork or Aevum (kit Checkout for now)
-packages/aevum/       chain config, ABIs, EIP-3009 typed data, getLogsChunked
-web/                  Next.js app (wagmi + RainbowKit) — kit checkout UI for now;
-                      Agent Allowance UI lands in a later phase
+  script/Deploy.s.sol     deploys Checkout to anvil, a fork or Aevum (kit)
+  script/DeployAllowanceVault.s.sol  deploys AllowanceVault (this entry)
+agent/                off-chain AI agent (Python, stdlib + cast)
+  agent.py            policy check + LLM chain + direct pay + decision log
+  tests/test_agent.py  19 hermetic unit tests
+  e2e_fork.sh         full e2e on the local fork (deploy → pay → refuse → revoke)
+packages/aevum/       chain config, ABIs (incl. allowanceVaultAbi), EIP-3009 typed data, getLogsChunked
+web/                  Next.js app (wagmi + RainbowKit)
   src/app/page.tsx        Setup check
+  src/app/allowance/      create allowance, look up + revoke, live AllowancePaid events
   src/app/checkout/       standard + gasless checkout (kit example)
   src/app/receipts/       receipt read from the chain
   src/app/activity/       Paid events, read in 1,000-block chunks
-  src/app/api/relay/      gasless relayer (server-side)
+  src/app/api/relay/      gasless relayer (server-side, kit example)
   src/app/globals.css     every color and font; edit to rebrand
 examples/             runnable TypeScript scripts (kit)
 tools/check-shanghai.mjs  fails the build on Cancun-only opcodes
@@ -241,6 +338,8 @@ make fork           Local copy of Aevum testnet on 127.0.0.1:8555 (chain 440050)
 make deploy-local   Deploy MockUSD8 + Checkout to `make anvil`
 make deploy-fork    Deploy Checkout (real tUSD8) to `make fork`
 make deploy-aevum   Deploy Checkout to Aevum testnet (ACCOUNT=<keystore>)
+make deploy-vault-fork  Deploy AllowanceVault (real tUSD8) to `make fork`
+make deploy-vault-aevum Deploy AllowanceVault to Aevum testnet (ACCOUNT=<keystore>)
 make mint           `make anvil` only: mint MockUSD8 (TO=, CHECKOUT=, AMOUNT=)
 make deal           `make fork` only: give TO tUSD8 and tQDAY
 make dev            Start the web app on http://localhost:3000
