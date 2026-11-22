@@ -14,7 +14,7 @@ merchants here: the owner sets a spending policy, the agent spends inside it.
 > **Status — Fase 3 ✅ (22 Nov 2026): deployed to Aevum testnet and demoed
 > end-to-end.** `AllowanceVault` is live at
 > [`0x7FBaa28bEF2c02B2287a8504C18e0B39dA8cA0a7`](https://explorer-test.qday.info/address/0x7FBaa28bEF2c02B2287a8504C18e0B39dA8cA0a7)
-> (chain 44005, deploy block 3788692). Demo allowance #1: cap 3 tUSD8,
+> (chain 44005, deploy block 3788948). Demo allowance #1: cap 3 tUSD8,
 > per-payment 1 tUSD8, expiry +1 day — the agent paid 1 tUSD8 with a live
 > LLM verdict (100milionseek/deepseek, risk 65), refused a 2 tUSD8
 > over-cap attempt at the policy layer, and the owner revoked with a
@@ -26,7 +26,7 @@ merchants here: the owner sets a spending policy, the agent spends inside it.
 >
 > **Alamat testnet:** vault
 > `0x7FBaa28bEF2c02B2287a8504C18e0B39dA8cA0a7` (chain 44005, deploy block
-> 3788692, deploy tx
+> 3788948, deploy tx
 > [`0xa0686e73b8a99e4844f28a4a9b38d9902c65ccb95c99f85ea63398728007a431`](https://explorer-test.qday.info/tx/0xa0686e73b8a99e4844f28a4a9b38d9902c65ccb95c99f85ea63398728007a431)).
 > Project wallet (testnet-only):
 > `0x3b5859096e164C0B4ACf8a1E9844d066a4d649A7` — funded with 1 tQDAY +
@@ -187,7 +187,7 @@ All of this is in [`packages/aevum/src/chain.ts`](packages/aevum/src/chain.ts) a
 | | |
 |---|---|
 | `AllowanceVault` | [`0x7FBaa28bEF2c02B2287a8504C18e0B39dA8cA0a7`](https://explorer-test.qday.info/address/0x7FBaa28bEF2c02B2287a8504C18e0B39dA8cA0a7) |
-| Deploy tx | [`0xa0686e73b8a99e4844f28a4a9b38d9902c65ccb95c99f85ea63398728007a431`](https://explorer-test.qday.info/tx/0xa0686e73b8a99e4844f28a4a9b38d9902c65ccb95c99f85ea63398728007a431) (block 3788692, status success, 992,195 gas at 1 gwei) |
+| Deploy tx | [`0xa0686e73b8a99e4844f28a4a9b38d9902c65ccb95c99f85ea63398728007a431`](https://explorer-test.qday.info/tx/0xa0686e73b8a99e4844f28a4a9b38d9902c65ccb95c99f85ea63398728007a431) (block 3788948, status success, 992,195 gas at 1 gwei) |
 | Deployed from commit | `e0b4f8da` (Fase 2) — the deployed bytecode is exactly that commit's `AllowanceVault.sol`; Fase 3 changed no contract code |
 | Token | tUSD8 [`0x456569838f1d43009A91ebA4263147Afd7233483`](https://explorer-test.qday.info/address/0x456569838f1d43009A91ebA4263147Afd7233483) (`vault.token()` returns this address) |
 | Demo allowance | #1 — owner = agent = payee = project wallet (see [Fase 3 demo](#fase-3-demo-testnet-22-nov-2026)) |
@@ -219,7 +219,7 @@ Local fork vault (ephemeral, chain 440050): `0xd08578f3d28e3193578220df182a73782
 > [`0x7FBaa28bEF2c02B2287a8504C18e0B39dA8cA0a7`](https://explorer-test.qday.info/address/0x7FBaa28bEF2c02B2287a8504C18e0B39dA8cA0a7),
 > deploy tx
 > [`0xa0686e73…07a431`](https://explorer-test.qday.info/tx/0xa0686e73b8a99e4844f28a4a9b38d9902c65ccb95c99f85ea63398728007a431),
-> block 3788692. The flow below is exactly what was run; re-run it to
+> block 3788948. The flow below is exactly what was run; re-run it to
 > deploy a fresh vault (it deploys from the keystore account, legacy tx).
 
 Keep your deployer key out of files and shell history. Foundry's encrypted keystore asks for the key once and a password each time:
@@ -257,7 +257,7 @@ per-payment cap 1 tUSD8, expiry +1 day, payee allowlist = [project wallet].
 
 | Step | What happened | Tx / evidence |
 |---|---|---|
-| Deploy vault | `AllowanceVault` deployed, token = tUSD8 | [`0xa0686e73…07a431`](https://explorer-test.qday.info/tx/0xa0686e73b8a99e4844f28a4a9b38d9902c65ccb95c99f85ea63398728007a431), block 3788692 |
+| Deploy vault | `AllowanceVault` deployed, token = tUSD8 | [`0xa0686e73…07a431`](https://explorer-test.qday.info/tx/0xa0686e73b8a99e4844f28a4a9b38d9902c65ccb95c99f85ea63398728007a431), block 3788948 |
 | Approve | Owner approves vault for 3 tUSD8 | [`0xdb4b65be…8883d5b`](https://explorer-test.qday.info/tx/0xdb4b65bee6b321a9765683eed6f2973af50a0fc5c26622d48483fc1298883d5b), block 3789287 |
 | Create allowance #1 | cap 3, per-pay 1, expiry 1795393104; vault escrows 3 tUSD8 | [`0x6a17eb04…3f8228d`](https://explorer-test.qday.info/tx/0x6a17eb0409e462514e9e15e553d3331b5697f3e837b308679f260f04c3f8228d), block 3789291, `AllowanceCreated` event |
 | Agent pays 1 tUSD8 | LLM (100milionseek/deepseek-v4.1-flash-free) + heuristic both approve, risk 65 < 70; `AllowancePaid` at block 3789316 | [`0xb5752a23…68347b`](https://explorer-test.qday.info/tx/0xb5752a230ef5d3e0919b21a74058a3bcfd33f3e912035472563a22116268347b); decision in `agent/decisions.jsonl` (ts 1795306737) |
