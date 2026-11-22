@@ -11,14 +11,26 @@ is an on-chain event, so the full spend history is an audit trail.
 merchants here: the owner sets a spending policy, the agent spends inside it.
 (Deliberately different from PayReceipt-style invoice payments.)
 
-> **Status — Fase 2:** contract + off-chain agent + web UI, all working on a
-> local fork. The agent judges payment requests (on-chain policy + LLM
-> chain) and pays with direct `pay()` from the agent wallet. Testnet
-> deploy is Fase 3 (needs the project wallet funded — see below).
+> **Status — Fase 3 ✅ (22 Nov 2026): deployed to Aevum testnet and demoed
+> end-to-end.** `AllowanceVault` is live at
+> [`0x7FBaa28bEF2c02B2287a8504C18e0B39dA8cA0a7`](https://explorer-test.qday.info/address/0x7FBaa28bEF2c02B2287a8504C18e0B39dA8cA0a7)
+> (chain 44005, deploy block 3788692). Demo allowance #1: cap 3 tUSD8,
+> per-payment 1 tUSD8, expiry +1 day — the agent paid 1 tUSD8 with a live
+> LLM verdict (100milionseek/deepseek, risk 65), refused a 2 tUSD8
+> over-cap attempt at the policy layer, and the owner revoked with a
+> 2 tUSD8 refund. All tx hashes are in [Fase 3 demo](#fase-3-demo-testnet-22-nov-2026).
+> Demo video: `../demo-video.mp4` (see [Demo video](#demo-video)). The
+> agent pays with direct `pay()` from the agent wallet. Testnet deploy
+> is Fase 3 — done; what remains before submit is in [Submitting your
+> project](#submitting-your-project).
 >
-> **Alamat testnet:** menyusul (Fase 3: deploy testnet). Local fork vault:
-> `0xd08578f3d28e3193578220df182a737820ac47cd` (chain 440050, ephemeral).
-> Project wallet (testnet-only, needs funding): `0x3b5859096e164C0B4ACf8a1E9844d066a4d649A7`.
+> **Alamat testnet:** vault
+> `0x7FBaa28bEF2c02B2287a8504C18e0B39dA8cA0a7` (chain 44005, deploy block
+> 3788692, deploy tx
+> [`0xa0686e73b8a99e4844f28a4a9b38d9902c65ccb95c99f85ea63398728007a431`](https://explorer-test.qday.info/tx/0xa0686e73b8a99e4844f28a4a9b38d9902c65ccb95c99f85ea63398728007a431)).
+> Project wallet (testnet-only):
+> `0x3b5859096e164C0B4ACf8a1E9844d066a4d649A7` — funded with 1 tQDAY +
+> 5 tUSD8, and exactly 5 tUSD8 again after the demo (1 paid + 2 refunded).
 
 Built on the [Aevum Starter Kit](https://github.com/qday-io/aevum-starter-kit)
 (MIT, © 2026 PQA Labs) — its chain config, `packages/aevum` helpers, fork
@@ -35,6 +47,8 @@ reference and is not used by Agent Allowance.
 - [Network details](#network-details)
 - [Get test tokens](#get-test-tokens)
 - [Deploy to Aevum testnet (Fase 3)](#deploy-to-aevum-testnet-fase-3)
+- [Fase 3 demo (testnet, 22 Nov 2026)](#fase-3-demo-testnet-22-nov-2026)
+- [Demo video](#demo-video)
 - [The off-chain agent (`agent/`)](the-off-chain-agent-agent)
 - [Things that differ from Ethereum](#things-that-differ-from-ethereum)
 - [Project layout](#project-layout)
@@ -168,15 +182,24 @@ All of this is in [`packages/aevum/src/chain.ts`](packages/aevum/src/chain.ts) a
 
 ### Alamat testnet
 
-Menyusul (Fase 3: deploy testnet). Fase 2 runs on a local fork — no
-contract has been deployed to Aevum testnet yet. Local fork vault (ephemeral,
-chain 440050): `0xd08578f3d28e3193578220df182a737820ac47cd`.
+**Live on Aevum testnet (chain 44005) since 22 Nov 2026:**
+
+| | |
+|---|---|
+| `AllowanceVault` | [`0x7FBaa28bEF2c02B2287a8504C18e0B39dA8cA0a7`](https://explorer-test.qday.info/address/0x7FBaa28bEF2c02B2287a8504C18e0B39dA8cA0a7) |
+| Deploy tx | [`0xa0686e73b8a99e4844f28a4a9b38d9902c65ccb95c99f85ea63398728007a431`](https://explorer-test.qday.info/tx/0xa0686e73b8a99e4844f28a4a9b38d9902c65ccb95c99f85ea63398728007a431) (block 3788692, status success, 992,195 gas at 1 gwei) |
+| Deployed from commit | `e0b4f8da` (Fase 2) — the deployed bytecode is exactly that commit's `AllowanceVault.sol`; Fase 3 changed no contract code |
+| Token | tUSD8 [`0x456569838f1d43009A91ebA4263147Afd7233483`](https://explorer-test.qday.info/address/0x456569838f1d43009A91ebA4263147Afd7233483) (`vault.token()` returns this address) |
+| Demo allowance | #1 — owner = agent = payee = project wallet (see [Fase 3 demo](#fase-3-demo-testnet-22-nov-2026)) |
 
 **Project wallet (testnet-only):** `0x3b5859096e164C0B4ACf8a1E9844d066a4d649A7`
 — fresh keypair created for this project; its private key lives outside
-the repo (never committed) and the wallet holds nothing of value. To fund
-it on testnet: claim the Discord faucet with your own wallet, then transfer
-1 tQDAY + 5 tUSD8 to that address. Never send real funds to it.
+the repo (never committed) and the wallet holds nothing of value. Funded
+once with 1 tQDAY + 5 tUSD8 from the Discord faucet (via the owner's own
+wallet); after the Fase 3 demo it holds ~0.999 tQDAY + exactly 5 tUSD8
+again. Never send real funds to it.
+
+Local fork vault (ephemeral, chain 440050): `0xd08578f3d28e3193578220df182a737820ac47cd`.
 
 ---
 
@@ -192,9 +215,12 @@ it on testnet: claim the Discord faucet with your own wallet, then transfer
 
 ## Deploy to Aevum testnet (Fase 3)
 
-> Not done yet — Fase 2 is local fork only. This section documents the
-> intended flow; do not run it until the project wallet is funded (see
-> [Alamat testnet](#alamat-testnet)).
+> Done 22 Nov 2026 — vault
+> [`0x7FBaa28bEF2c02B2287a8504C18e0B39dA8cA0a7`](https://explorer-test.qday.info/address/0x7FBaa28bEF2c02B2287a8504C18e0B39dA8cA0a7),
+> deploy tx
+> [`0xa0686e73…07a431`](https://explorer-test.qday.info/tx/0xa0686e73b8a99e4844f28a4a9b38d9902c65ccb95c99f85ea63398728007a431),
+> block 3788692. The flow below is exactly what was run; re-run it to
+> deploy a fresh vault (it deploys from the keystore account, legacy tx).
 
 Keep your deployer key out of files and shell history. Foundry's encrypted keystore asks for the key once and a password each time:
 
@@ -219,6 +245,65 @@ forge verify-contract <address> src/AllowanceVault.sol:AllowanceVault --chain-id
 > Use a wallet made only for testing. Never paste a private key into chat, an issue, or a committed file.
 
 ---
+
+## Fase 3 demo (testnet, 22 Nov 2026)
+
+One allowance, one agent, end to end on Aevum testnet — run it yourself
+with [`agent/e2e_testnet.sh`](agent/e2e_testnet.sh) (needs a funded
+testnet keystore, `ACCOUNT=<name>`). Owner = agent = payee = the project
+wallet `0x3b5859096e164C0B4ACf8a1E9844d066a4d649A7`, so every demo
+tUSD8 stays under project control. Allowance #1: total cap 3 tUSD8,
+per-payment cap 1 tUSD8, expiry +1 day, payee allowlist = [project wallet].
+
+| Step | What happened | Tx / evidence |
+|---|---|---|
+| Deploy vault | `AllowanceVault` deployed, token = tUSD8 | [`0xa0686e73…07a431`](https://explorer-test.qday.info/tx/0xa0686e73b8a99e4844f28a4a9b38d9902c65ccb95c99f85ea63398728007a431), block 3788692 |
+| Approve | Owner approves vault for 3 tUSD8 | [`0xdb4b65be…8883d5b`](https://explorer-test.qday.info/tx/0xdb4b65bee6b321a9765683eed6f2973af50a0fc5c26622d48483fc1298883d5b), block 3789287 |
+| Create allowance #1 | cap 3, per-pay 1, expiry 1795393104; vault escrows 3 tUSD8 | [`0x6a17eb04…3f8228d`](https://explorer-test.qday.info/tx/0x6a17eb0409e462514e9e15e553d3331b5697f3e837b308679f260f04c3f8228d), block 3789291, `AllowanceCreated` event |
+| Agent pays 1 tUSD8 | LLM (100milionseek/deepseek-v4.1-flash-free) + heuristic both approve, risk 65 < 70; `AllowancePaid` at block 3789316 | [`0xb5752a23…68347b`](https://explorer-test.qday.info/tx/0xb5752a230ef5d3e0919b21a74058a3bcfd33f3e912035472563a22116268347b); decision in `agent/decisions.jsonl` (ts 1795306737) |
+| Agent tries 2 tUSD8 | **Refused at the policy layer** — `amount 2000000 exceeds per-payment cap 1000000`; no tx, `remaining` stays 2 tUSD8 | decision in `agent/decisions.jsonl` (ts 1795306763, `approved: false`, `tx_hash: null`) |
+| Revoke | Owner revokes; 2 tUSD8 refunded, vault balance 0, `remaining` 0 | [`0xa73ed167…8f652d`](https://explorer-test.qday.info/tx/0xa73ed167849833fca9f021fc851bff23a49dcf97caaab9da8aa541215d8f652d), block 3789658, `AllowanceRevoked` (refunded 2 tUSD8) |
+
+Money check: owner starts with 5 tUSD8 → 2 after funding the allowance →
+3 after the 1 tUSD8 payment (payee is the owner) → **5 after the revoke**.
+Net spend: 0 tUSD8; the only cost is gas — measured 0.0012 tQDAY total
+for the five txs (wallet 1 → 0.9988 tQDAY at ~1 gwei). The UI shows the same flow live: lookup #1 reads
+`Spent: 1 · Remaining: 2 tUSD8, Status: active`, the payments table lists
+the `AllowancePaid` event, and after revoke it reads `Status: revoked`.
+
+### Reproduce it (step by step)
+
+```bash
+# 1. Fund a fresh testnet-only wallet (Discord faucet, then transfer
+#    1 tQDAY + 5 tUSD8 to it) and import it into a Foundry keystore:
+cast wallet import aevum-deployer --interactive
+cast wallet address --account aevum-deployer   # fund THIS address
+
+# 2. Deploy the vault (or reuse the Fase 3 address above):
+make deploy-vault-aevum ACCOUNT=aevum-deployer
+
+# 3. Point the web app at the vault and run it:
+cp web/.env.example web/.env.local   # set NEXT_PUBLIC_VAULT_AEVUM + NEXT_PUBLIC_DEPLOY_BLOCK_AEVUM
+pnpm build && pnpm --filter web start --port 3000   # http://localhost:3000/allowance
+#    Note: `pnpm dev` (Turbopack) 500s on the Google-Fonts loader in this
+#    sandbox; the production build works. In a normal browser both work.
+
+# 4. Run the whole demo (create -> pay 1 -> refuse 2 -> revoke):
+ACCOUNT=aevum-deployer bash agent/e2e_testnet.sh [VAULT_ADDRESS]
+#    The agent needs no LLM keys: without them it runs heuristic-only.
+#    With keys (or the Secure Vault surrogate) it uses the full chain
+#    100milionseek -> OpenRouter -> Coarena -> heuristic.
+```
+
+## Demo video
+
+`../demo-video.mp4` (in the challenge folder, next to this repo — not
+committed to the repo), under 3 minutes: UI create-allowance form →
+agent pays 1 tUSD8 (terminal, live LLM verdict) → `AllowancePaid` event
+live in the UI → over-cap 2 tUSD8 refused → owner revokes, 2 tUSD8
+refunded. Built from headless-Chromium screenshots of the real testnet
+UI and the agent's terminal output (see
+`../phase3-evidence/` for the source screenshots and logs).
 
 ## The off-chain agent (`agent/`)
 
